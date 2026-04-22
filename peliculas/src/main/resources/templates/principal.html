@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieRec - Recomendaciones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a0a13;
+            --card-bg: #2d1322;
+            --accent-color: #ff4d94;
+            --accent-hover: #ff1a75;
+            --text-color: #ffffff;
+            --secondary-text: #fbc6d9;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at center, #3d162d 0%, #1a0a13 100%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            background-color: var(--card-bg) !important;
+            padding: 0.8rem 2rem !important;
+            border-bottom: 1px solid rgba(255, 77, 148, 0.3) !important;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo {
+            color: var(--accent-color);
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(255, 77, 148, 0.5);
+        }
+
+        .nav-link { color: white !important; font-weight: bold; }
+
+        .dropdown-menu {
+            background-color: var(--card-bg) !important;
+            border: 1px solid rgba(255, 77, 148, 0.3) !important;
+            border-radius: 12px !important;
+        }
+
+        .dropdown-item { color: white !important; }
+        .dropdown-item:hover { background-color: var(--accent-color) !important; }
+
+        .btn-logout {
+            background: none;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 5px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        /* --- CONTENIDO --- */
+        .main-content { margin-top: 130px; text-align: center; padding: 20px; max-width: 1100px; margin-left: auto; margin-right: auto; }
+
+        .search-container {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 77, 148, 0.2);
+            margin-bottom: 60px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .custom-select, .custom-input {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 77, 148, 0.3);
+            border-radius: 12px;
+            padding: 12px 20px;
+            width: 100%;
+        }
+
+        .custom-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+        .custom-select option {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+
+        .btn-recommend {
+            background-color: var(--accent-color);
+            color: white; border: none; padding: 12px 30px;
+            border-radius: 12px; font-weight: bold; cursor: pointer;
+            transition: 0.3s; text-transform: uppercase;
+            height: 100%;
+        }
+        .btn-recommend:hover { background-color: var(--accent-hover); transform: scale(1.02); }
+
+        /* --- FICHA PELÍCULA --- */
+        .recommendation-result {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 77, 148, 0.1);
+        }
+
+        .neon-poster { border: 2px solid var(--accent-color); box-shadow: 0 0 25px rgba(255, 77, 148, 0.3); width: 100%; border-radius: 15px; }
+
+        .movie-title { font-size: 2rem; color: #ffffff; text-shadow: 0 0 10px rgba(255, 77, 148, 0.5); }
+        .movie-year { color: var(--accent-color); font-weight: bold; margin-bottom: 15px; display: block; }
+        .desc-text { color: var(--secondary-text); font-style: italic; line-height: 1.6; margin: 20px 0; text-align: left; }
+
+        .btn-add { background-color: var(--accent-color); color: white; font-weight: bold; border-radius: 10px; padding: 12px; border: none; width: 100%; }
+        .btn-skip { background-color: transparent; color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 12px; width: 100%; text-decoration: none; display: inline-block; text-align: center; transition: 0.3s; cursor: pointer;}
+        .btn-skip:hover { background: rgba(255,255,255,0.1); }
+
+        /* --- RECIENTES --- */
+        .recent-title { color: var(--secondary-text); text-align: left; border-left: 5px solid var(--accent-color); padding-left: 15px; margin-bottom: 30px; }
+        .movies-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+        .movie-item { background: rgba(45, 19, 34, 0.5); padding: 15px; border-radius: 20px; border: 1px solid rgba(255, 77, 148, 0.1); transition: 0.3s; }
+        .recent-poster { width: 100%; height: 350px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid nav-container">
+        <a th:href="@{/principal}" class="logo">MOVIEREC</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">MENU PRINCIPAL</a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-item" th:href="@{/principal}">🏠 Recomendador</a></li>
+                        <li><a class="dropdown-item" th:href="@{/diario}">📚 Mi Historial</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item ms-lg-3">
+                    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout">Salir</button></form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="main-content">
+    <h2 class="mb-5 fw-bold">¿Qué te apetece ver hoy?</h2>
+
+    <div style="background: rgba(255,255,0,0.1); color: #ff4d94; padding: 10px; border-radius: 10px; margin-bottom: 20px;"
+         th:if="${pelicula == null and generoSeleccionado != null}">
+        ⚠️ No hemos encontrado películas con esos filtros. ¡Prueba a cambiarlos!
+    </div>
+
+    <div class="search-container">
+        <form th:action="@{/recomendar}" method="post" id="formFiltros">
+            <div class="row g-3 text-start">
+                <div class="col-md-4">
+                    <label class="form-label text-secondary small ps-2">Género</label>
+                    <select name="genero" class="custom-select">
+                        <option value="random" th:selected="${generoSeleccionado == 'random' or generoSeleccionado == null}">Cualquier género 🎲</option>
+                        <option value="action" th:selected="${generoSeleccionado == 'action'}">Acción 💥</option>
+                        <option value="comedy" th:selected="${generoSeleccionado == 'comedy'}">Comedia 😂</option>
+                        <option value="drama" th:selected="${generoSeleccionado == 'drama'}">Drama 🎭</option>
+                        <option value="horror" th:selected="${generoSeleccionado == 'horror'}">Terror 👻</option>
+                        <option value="sci-fi" th:selected="${generoSeleccionado == 'sci-fi'}">Ciencia Ficción 🚀</option>
+                        <option value="animation" th:selected="${generoSeleccionado == 'animation'}">Animación 🦄</option>
+                        <option value="romance" th:selected="${generoSeleccionado == 'romance'}">Romance ❤️</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-secondary small ps-2">Década</label>
+                    <select name="decada" class="custom-select">
+                        <option value="" th:selected="${decadaSeleccionada == '' or decadaSeleccionada == null}">Cualquier época</option>
+                        <option value="2020" th:selected="${decadaSeleccionada == '2020'}">2020s</option>
+                        <option value="2010" th:selected="${decadaSeleccionada == '2010'}">2010s</option>
+                        <option value="2000" th:selected="${decadaSeleccionada == '2000'}">2000s</option>
+                        <option value="1990" th:selected="${decadaSeleccionada == '1990'}">1990s</option>
+                        <option value="1980" th:selected="${decadaSeleccionada == '1980'}">1980s</option>
+                        <option value="1970" th:selected="${decadaSeleccionada == '1970'}">1970s</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-secondary small ps-2">Rating Mínimo</label>
+                    <select name="rating" class="custom-select">
+                        <option value="0" th:selected="${ratingSeleccionado == 0 or ratingSeleccionado == null}">Cualquier nota</option>
+                        <option value="5" th:selected="${ratingSeleccionado == 5}">⭐ 5+ (Aceptable)</option>
+                        <option value="7" th:selected="${ratingSeleccionado == 7}">⭐ 7+ (Buena)</option>
+                        <option value="8" th:selected="${ratingSeleccionado == 8}">⭐ 8+ (Imprescindible)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-8">
+                    <label class="form-label text-secondary small ps-2">Actor(es) o Director(es)</label>
+                    <input type="text" name="persona" class="custom-input" th:value="${personaSeleccionada}" placeholder="Ej: Christopher Nolan, Robert De Niro...">
+                </div>
+
+                <div class="col-md-4 d-grid">
+                    <label class="form-label text-transparent small d-none d-md-block">&nbsp;</label>
+                    <button type="submit" class="btn-recommend">Buscar Película</button>
+                </div>
+            </div>
+        </form>
+
+        <div th:if="${pelicula != null}" class="recommendation-result mt-5">
+            <div class="row align-items-center text-start">
+                <div class="col-md-5">
+                    <img th:src="${pelicula.poster}" class="neon-poster" alt="Poster">
+                </div>
+                <div class="col-md-7 ps-md-5">
+                    <h2 class="movie-title fw-bold" th:text="${pelicula.titulo}">Título</h2>
+                    <span class="movie-year" th:text="${pelicula.anio}">Año</span>
+                    <p class="desc-text" th:text="${pelicula.descripcion}">Sinopsis...</p>
+
+                    <form th:action="@{/guardar}" method="post">
+                        <input type="hidden" name="titulo" th:value="${pelicula.titulo}">
+                        <input type="hidden" name="poster" th:value="${pelicula.poster}">
+
+                        <label class="mb-2 d-block text-secondary">Tu valoración:</label>
+                        <select name="estrellas" class="custom-select w-100 mb-4">
+                            <option value="0.5">0.5 ⭐ (Pésima)</option>
+                            <option value="1.0">1.0 ⭐</option>
+                            <option value="2.0">2.0 ⭐</option>
+                            <option value="3.0">3.0 ⭐</option>
+                            <option value="3.5" selected>3.5 ⭐ (Me ha gustado)</option>
+                            <option value="4.0">4.0 ⭐ (PEC)</option>
+                            <option value="5.0">5.0 ⭐ (Cine)</option>
+                        </select>
+
+                        <div class="row g-2">
+                            <div class="col-6"><button type="submit" class="btn-add">Añadir al Diario</button></div>
+                            <div class="col-6">
+                                <button type="button" onclick="prepararPasar()" class="btn-skip">Pasar</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <form id="formPasar" th:action="@{/recomendar}" method="post" style="display:none;">
+                        <input type="hidden" name="genero" id="pasarGenero">
+                        <input type="hidden" name="decada" id="pasarDecada">
+                        <input type="hidden" name="rating" id="pasarRating">
+                        <input type="hidden" name="persona" id="pasarPersona">
+                        <input type="hidden" name="excluirTemporal" th:value="${pelicula.titulo}">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${recientes != null}" class="mt-5">
+        <h3 class="recent-title">Añadidas recientemente 🎬</h3>
+        <div class="movies-grid">
+            <div class="movie-item" th:each="p : ${recientes}">
+                <img th:src="${p.poster}" class="recent-poster">
+                <p class="fw-bold m-0" th:text="${p.titulo}">Título</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    /**
+     * Función para que el botón "Pasar" no pierda los filtros actuales.
+     * Copia los valores del formulario de búsqueda al formulario oculto antes de enviarlo.
+     */
+    function prepararPasar() {
+        const formFiltros = document.getElementById('formFiltros');
+
+        document.getElementById('pasarGenero').value = formFiltros.querySelector('select[name="genero"]').value;
+        document.getElementById('pasarDecada').value = formFiltros.querySelector('select[name="decada"]').value;
+        document.getElementById('pasarRating').value = formFiltros.querySelector('select[name="rating"]').value;
+        document.getElementById('pasarPersona').value = formFiltros.querySelector('input[name="persona"]').value;
+
+        document.getElementById('formPasar').submit();
+    }
+</script>
+
+</body>
+</html>

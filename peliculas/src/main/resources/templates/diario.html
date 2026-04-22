@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieRec - Mi Diario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a0a13;
+            --card-bg: #2d1322;
+            --accent-color: #ff4d94;
+            --accent-hover: #ff1a75;
+            --text-color: #ffffff;
+            --secondary-text: #fbc6d9;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at center, #3d162d 0%, #1a0a13 100%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        /* BARRA DE NAVEGACIÓN LIMPIA */
+        .navbar {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 77, 148, 0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .logo {
+            color: var(--accent-color);
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(255, 77, 148, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        /* Dropdown corregido */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            padding: 10px;
+            font-weight: bold;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--card-bg);
+            min-width: 180px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 77, 148, 0.2);
+            right: 0;
+        }
+
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--accent-color);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .btn-logout {
+            background: none;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 5px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-logout:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        /* CONTENIDO DEL DIARIO */
+        .main-content {
+            margin-top: 120px;
+            padding: 20px;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            border-left: 6px solid var(--accent-color);
+            padding-left: 20px;
+            color: white;
+        }
+
+        /* Grid de Películas Valoradas */
+        .diario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 30px;
+        }
+
+        .movie-card {
+            background: rgba(45, 19, 34, 0.5);
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 77, 148, 0.1);
+            transition: 0.4s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .movie-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-10px);
+            background: var(--card-bg);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .movie-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .movie-stars {
+            color: #ffb800; /* Dorado para las estrellas */
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        /* Botón Eliminar Estilizado */
+        .btn-delete {
+            background-color: transparent;
+            color: #ff4d4d;
+            border: 1px solid #ff4d4d;
+            padding: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+            margin-top: auto;
+            font-size: 0.9rem;
+        }
+
+        .btn-delete:hover {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        .empty-msg {
+            text-align: center;
+            padding: 50px;
+            color: var(--secondary-text);
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a th:href="@{/principal}" class="logo">MOVIEREC</a>
+
+        <div class="nav-links">
+            <div class="dropdown">
+                <button class="dropbtn">MENU PRINCIPAL ▼</button>
+                <div class="dropdown-content">
+                    <a th:href="@{/principal}">🏠 Recomendador</a>
+                    <a th:href="@{/diario}">📚 Mi Historial</a>
+                </div>
+            </div>
+
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn-logout">Salir</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="main-content">
+    <h2 class="page-title">Mi Historial de Películas 🍿</h2>
+
+    <div th:if="${#lists.isEmpty(peliculas)}" class="empty-msg">
+        <p>Aún no has guardado ninguna película. ¡Busca una recomendación!</p>
+    </div>
+
+    <div class="diario-grid">
+        <div class="movie-card" th:each="peli : ${peliculas}">
+            <img th:src="${peli.poster}" alt="Poster" class="movie-poster">
+
+            <div class="movie-title" th:text="${peli.titulo}">Título</div>
+
+            <div class="movie-stars">
+                <span th:text="${peli.estrellas}">0.0</span> ⭐
+            </div>
+
+            <form th:action="@{/eliminar/{id}(id=${peli.id})}" method="post">
+                <button type="submit" class="btn-delete"
+                        onclick="return confirm('¿Quieres borrar esta película de tu historial?')">
+                    🗑️ Eliminar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
