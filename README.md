@@ -3,7 +3,7 @@
 
 ## Características Principales
 
-* **Autenticación Segura:** Sistema de registro y login con cifrado de contraseñas mediante **BCrypt**.
+* **Autenticación Segura:** Sistema de registro y login con cifrado de contraseñas.
 * **Perfiles Privados:** Cada usuario dispone de su propio historial de películas valoradas y lista de descartes.
 * **Recomendador Inteligente:** Motor de búsqueda que filtra por género, década, puntuación mínima y actores/directores.
 * **Diario de Cine:** Galería estética donde el usuario guarda sus películas con valoración por estrellas.
