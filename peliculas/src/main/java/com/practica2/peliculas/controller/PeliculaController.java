@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +37,7 @@ public class PeliculaController {
     private UsuarioRepository usuarioRepository;
 
     // --- PANTALLA PRINCIPAL ---
-    // Ahora filtrado para que cada usuario solo vea sus propias películas recientes
+    // Filtro para que cada usuario solo vea sus propias películas recientes
     @GetMapping("/principal")
     public String principal(Model model, Authentication auth) {
         Usuario usuarioActual = usuarioRepository.findByUsername(auth.getName()).get();
@@ -55,11 +56,11 @@ public class PeliculaController {
                              Authentication auth,
                              Model model) {
 
-        // Cargamos los datos del usuario actual para mantener la interfaz actualizada
+        // Cargo los datos del usuario actual para mantener la interfaz actualizada
         Usuario usuarioActual = usuarioRepository.findByUsername(auth.getName()).get();
         model.addAttribute("recientes", peliculaRepository.findTop4ByUsuarioOrderByIdDesc(usuarioActual));
 
-        // Devolvemos filtros a la vista
+        // Y devuelve filtros a la vista
         model.addAttribute("generoSeleccionado", genero);
         model.addAttribute("decadaSeleccionada", decada);
         model.addAttribute("ratingSeleccionado", rating);
@@ -75,7 +76,7 @@ public class PeliculaController {
         session.setAttribute("saltadas", saltadas);
 
         try {
-            // Pasamos los filtros al microservicio de Python
+            // Paso los filtros al microservicio de Python
             MovieDTO recomendacion = recomendadorService.obtenerRecomendacion(genero, decada, rating, persona, saltadas);
             model.addAttribute("pelicula", recomendacion);
         } catch (Exception e) {
@@ -92,17 +93,55 @@ public class PeliculaController {
                           @RequestParam double estrellas,
                           Authentication auth) {
 
-        // Buscamos quién es el usuario logueado
+        // Busqued de quién es el usuario logueado
         Usuario usuarioActual = usuarioRepository.findByUsername(auth.getName()).get();
 
         PeliculaValorada peli = new PeliculaValorada();
         peli.setTitulo(titulo);
         peli.setPoster(poster);
         peli.setEstrellas(estrellas);
-        peli.setUsuario(usuarioActual); // Asignamos el dueño de la película
+        peli.setUsuario(usuarioActual); // Le asigno el dueño a la película
+        // La fecha se asigna sola gracias al @PrePersist de la Entidad
 
         peliculaRepository.save(peli);
         return "redirect:/diario";
+    }
+
+    // --- ACTUALIZAR REGISTRO DEL DIARIO (UPDATE) ---
+    // Modifico las estrellas y la fecha de visionado de una película guardada
+    @PostMapping("/editar/{id}")
+    public String editarPelicula(@PathVariable Long id,
+                                 @RequestParam double estrellas,
+                                 @RequestParam String fecha,
+                                 Authentication auth) {
+        try {
+            // Busca la película en el diario
+            PeliculaValorada peli = peliculaRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Película no encontrada"));
+
+            // Y se Verifica que pertenezca al usuario que tiene la sesión activa
+            if (!peli.getUsuario().getUsername().equals(auth.getName())) {
+                return "redirect:/diario?error=unauthorized";
+            }
+
+            // Parseo la fecha introducida en el formulario (YYYY-MM-DD)
+            LocalDate fechaIntroducida = LocalDate.parse(fecha);
+
+            // Y valido si la fecha es estrictamente posterior a hoy, si no se detiene el proceso
+            if (fechaIntroducida.isAfter(LocalDate.now())) {
+                return "redirect:/diario?errorFecha=true";
+            }
+
+            // Si pasa la validación, modifica los valores
+            peli.setEstrellas(estrellas);
+            peli.setFechaGuardado(fechaIntroducida);
+
+            // Guardo los cambios en la base de datos
+            peliculaRepository.save(peli);
+            return "redirect:/diario?editado=true";
+        } catch (Exception e) {
+            return "redirect:/diario?error=true";
+        }
     }
 
     // --- DESCARTAR PARA SIEMPRE ---

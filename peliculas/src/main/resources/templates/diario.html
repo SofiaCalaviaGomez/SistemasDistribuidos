@@ -123,7 +123,7 @@
         .movie-card {
             background: var(--card-bg);
             backdrop-filter: blur(8px);
-            padding: 12px;
+            padding: 15px;
             border-radius: 24px;
             border: 1px solid rgba(255, 77, 148, 0.1);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -139,7 +139,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Retardo en cascada para las tarjetas */
         .movie-card:nth-child(n) { animation-delay: calc(0.1s * var(--i, 1)); }
 
         .movie-card:hover {
@@ -149,11 +148,10 @@
             background: rgba(45, 19, 34, 0.9);
         }
 
-        /* Badge de puntuación flotante */
         .rating-badge {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 25px;
+            right: 25px;
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(5px);
             color: var(--star-color);
@@ -167,24 +165,57 @@
 
         .movie-poster {
             width: 100%;
-            height: 350px;
+            height: 330px;
             object-fit: cover;
             border-radius: 18px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             transition: 0.3s;
         }
 
         .movie-title {
             font-weight: bold;
             font-size: 1.1rem;
-            margin: 10px 0;
+            margin: 5px 0;
             min-height: 2.4em;
             display: flex;
             align-items: center;
             justify-content: center;
+            text-align: center;
         }
 
-        /* --- BOTÓN ELIMINAR --- */
+        .movie-date {
+            font-size: 0.85rem;
+            color: var(--secondary-text);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* --- BOTONES DE ACCIÓN --- */
+        .actions-container {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-edit {
+            background-color: rgba(255, 77, 148, 0.1);
+            color: var(--accent-color);
+            border: 1px solid rgba(255, 77, 148, 0.4);
+            padding: 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            width: 50%;
+            transition: 0.3s;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .btn-edit:hover {
+            background-color: var(--accent-color);
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 77, 148, 0.4);
+        }
+
         .btn-delete {
             background-color: rgba(255, 77, 77, 0.1);
             color: #ff4d4d;
@@ -194,19 +225,69 @@
             cursor: pointer;
             width: 100%;
             transition: 0.3s;
-            margin-top: 10px;
             font-weight: 600;
-            opacity: 0.6; /* Semi-transparente por defecto */
-        }
-
-        .movie-card:hover .btn-delete {
-            opacity: 1; /* Se ilumina al pasar el ratón por la tarjeta */
+            font-size: 0.85rem;
         }
 
         .btn-delete:hover {
             background-color: #ff4d4d;
             color: white;
             box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
+        }
+
+        /* --- FORMULARIO DESPLEGABLE --- */
+        .edit-form-panel {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(255, 77, 148, 0.3);
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            color: var(--secondary-text);
+            display: block;
+            margin-bottom: 4px;
+            text-align: left;
+        }
+
+        .edit-input {
+            width: 100%;
+            background: #1a0a13;
+            color: white;
+            border: 1px solid rgba(255, 77, 148, 0.4);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+        }
+
+        .edit-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .btn-submit-edit {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 5px;
+        }
+
+        .btn-submit-edit:hover {
+            background-color: var(--accent-hover);
         }
 
         .empty-msg {
@@ -243,6 +324,18 @@
 <div class="main-content">
     <h2 class="page-title">Mi Diario de Cine 🍿</h2>
 
+    <div th:if="${param.editado}" style="background: rgba(0, 255, 128, 0.15); color: #00ff80; padding: 12px; border-radius: 12px; margin-bottom: 25px; font-weight: bold; text-align: center;">
+        ✨ ¡Cambios guardados con éxito en el diario!
+    </div>
+
+    <div th:if="${param.errorFecha}" style="background: rgba(255, 153, 0, 0.15); color: #ff9900; padding: 12px; border-radius: 12px; margin-bottom: 25px; font-weight: bold; text-align: center;">
+        ⚠️ La fecha introducida no es correcta: no puedes registrar películas con fechas futuras.
+    </div>
+
+    <div th:if="${param.error}" style="background: rgba(255, 77, 77, 0.15); color: #ff4d4d; padding: 12px; border-radius: 12px; margin-bottom: 25px; font-weight: bold; text-align: center;">
+        ❌ No se pudieron actualizar los datos o no tienes permisos.
+    </div>
+
     <div th:if="${#lists.isEmpty(peliculas)}" class="empty-msg">
         <h3 style="color: var(--secondary-text)">Tu historial está vacío</h3>
         <p>Parece que aún no has valorado ninguna película. ¡Vuelve al recomendador!</p>
@@ -261,15 +354,67 @@
 
             <div class="movie-title" th:text="${peli.titulo}">Título de la Película</div>
 
-            <form th:action="@{/eliminar/{id}(id=${peli.id})}" method="post">
-                <button type="submit" class="btn-delete"
-                        onclick="return confirm('¿Eliminar esta película de tu historial?')">
-                    🗑️ Quitar del diario
+            <div class="movie-date">
+                📅 Vista el: <span th:text="${peli.fechaGuardado != null} ? ${#temporals.format(peli.fechaGuardado, 'dd/MM/yyyy')} : 'Sin fecha'">01/01/2026</span>
+            </div>
+
+            <div class="actions-container">
+                <button type="button" class="btn-edit" th:onclick="'toggleEditar(' + ${peli.id} + ')'">
+                    ✏️ Editar
                 </button>
-            </form>
+
+                <form th:action="@{/eliminar/{id}(id=${peli.id})}" method="post" style="width: 50%; display: inline;">
+                    <button type="submit" class="btn-delete"
+                            onclick="return confirm('¿Eliminar esta película de tu historial?')">
+                        🗑️ Quitar
+                    </button>
+                </form>
+            </div>
+
+            <div th:id="'form-editar-' + ${peli.id}" class="edit-form-panel">
+                <form th:action="@{/editar/{id}(id=${peli.id})}" method="post">
+
+                    <div class="form-group">
+                        <label>Nueva Puntuación:</label>
+                        <select name="estrellas" class="edit-input">
+                            <option value="0.5" th:selected="${peli.estrellas == 0.5}">0.5 ⭐</option>
+                            <option value="1.0" th:selected="${peli.estrellas == 1.0}">1.0 ⭐</option>
+                            <option value="1.5" th:selected="${peli.estrellas == 1.5}">1.5 ⭐</option>
+                            <option value="2.0" th:selected="${peli.estrellas == 2.0}">2.0 ⭐</option>
+                            <option value="2.5" th:selected="${peli.estrellas == 2.5}">2.5 ⭐</option>
+                            <option value="3.0" th:selected="${peli.estrellas == 3.0}">3.0 ⭐</option>
+                            <option value="3.5" th:selected="${peli.estrellas == 3.5}">3.5 ⭐</option>
+                            <option value="4.0" th:selected="${peli.estrellas == 4.0}">4.0 ⭐</option>
+                            <option value="4.5" th:selected="${peli.estrellas == 4.5}">4.5 ⭐</option>
+                            <option value="5.0" th:selected="${peli.estrellas == 5.0}">5.0 ⭐</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fecha de visionado:</label>
+                        <input type="date" name="fecha" th:value="${peli.fechaGuardado}"
+                               th:attr="max=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                               required class="edit-input">
+                    </div>
+
+                    <button type="submit" class="btn-submit-edit">💾 Confirmar Cambios</button>
+                </form>
+            </div>
+
         </div>
     </div>
 </div>
+
+<script>
+    function toggleEditar(id) {
+        const formPanel = document.getElementById('form-editar-' + id);
+        if (formPanel.style.display === 'none' || formPanel.style.display === '') {
+            formPanel.style.display = 'block';
+        } else {
+            formPanel.style.display = 'none';
+        }
+    }
+</script>
 
 </body>
 </html>
