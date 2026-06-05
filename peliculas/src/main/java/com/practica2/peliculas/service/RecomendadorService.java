@@ -27,13 +27,13 @@ public class RecomendadorService {
     // Método principal que solicita una película al API de Flask (Python)
     public MovieDTO obtenerRecomendacion(String genero, String decada, Double rating, String persona, List<String> excluidasTemporales) {
         try {
-            // 1. Limpieza y preparación de filtros (evita enviar valores nulos)
+            // Limpieza y preparación de filtros (evita enviar valores nulos)
             String personaLimpia = (persona != null) ? persona.trim() : "";
             String decadaLimpia = (decada != null) ? decada.trim() : "";
             String generoLimpio = (genero != null) ? genero.toLowerCase() : "random";
 
-            // 2. Gestión de "Memoria": Buscamos qué películas NO debemos mostrar
-            // Sacamos los títulos de la tabla de 'Valoradas' y de 'Descartadas'
+            // Buscaa qué películas NO debemos mostrar
+            // Saca los títulos de la tabla de 'Valoradas' y de 'Descartadas'
             List<String> vistas = peliculaRepository.findAll().stream()
                     .map(p -> p.getTitulo()).collect(Collectors.toList());
 
@@ -43,22 +43,22 @@ public class RecomendadorService {
             List<String> todasExcluidas = new ArrayList<>(vistas);
             todasExcluidas.addAll(descartadas);
 
-            // 3. Añadimos las películas que el usuario ha saltado en esta sesión actual
+            // Se Añaden las películas que el usuario ha saltado en esta sesión actual
             if (excluidasTemporales != null) {
                 todasExcluidas.addAll(excluidasTemporales);
             }
 
-            // Convertimos la lista de títulos en una sola cadena separada por comas para enviarla por URL
+            // Convierte la lista de títulos en una sola cadena separada por comas para enviarla por URL
             String excluidasStr = String.join(",", todasExcluidas);
 
-            // 4. Comunicación con el API de terceros (Python)
-            // Definimos la dirección del servidor Flask y sus parámetros
+            // Comunicación con el API de terceros (Python)
+            // Defino la dirección del servidor Flask y sus parámetros
             String url = "http://localhost:5000/api/recomendar?genero={g}&decada={d}&rating={r}&persona={p}&excluir={e}";
 
             // LOG de control para depurar errores en la consola de IntelliJ
             System.out.println("DEBUG: Enviando filtros -> Gen: " + generoLimpio + " | Dec: " + decadaLimpia + " | Rat: " + rating + " | Per: " + personaLimpia);
 
-            // 5. Ejecución de la llamada: Java espera a que Python responda con un objeto MovieDTO
+            //Java espera a que Python responda con un objeto MovieDTO
             return restTemplate.getForObject(url, MovieDTO.class,
                     generoLimpio, decadaLimpia, rating, personaLimpia, excluidasStr
             );

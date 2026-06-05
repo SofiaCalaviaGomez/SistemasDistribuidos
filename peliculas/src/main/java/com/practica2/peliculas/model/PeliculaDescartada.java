@@ -22,7 +22,7 @@ public class PeliculaDescartada {
     }
 
     // --- MÉTODOS GETTERS Y SETTERS ---
-    // Sirven para que Spring pueda leer y escribir datos en los atributos privados
+    // hacen que el Spring pueda leer y escribir datos en los atributos privados
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

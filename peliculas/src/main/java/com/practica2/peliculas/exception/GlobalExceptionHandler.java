@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PythonApiException.class)
     public String handlePythonError(PythonApiException ex, Model model, Locale locale) {
 
-        // 1. Buscamos la traducción
+        // Busca la traducción
         String mensajeTraducido = messageSource.getMessage(
                 "error." + ex.getErrorCode(),
                 null,
@@ -22,10 +22,10 @@ public class GlobalExceptionHandler {
                 locale
         );
 
-        // 2. Añadimos el mensaje al modelo para Thymeleaf
+        // Se añade el mensaje al modelo para Thymeleaf
         model.addAttribute("errorMensaje", mensajeTraducido);
 
-        // 3. Devolvemos la vista
+        // Devuleve la vista
         return "principal";
     }
 }

@@ -19,12 +19,17 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // 1. Busca al usuario en la base de datos por su nombre de usuario
+        // Busco al usuario en la base de datos por su nombre de usuario
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
-        // 2. Si lo encuentra, lo convierte en un objeto "UserDetails" que Spring Security entiende
-        // Se le pasa: Nombre de usuario, Contraseña (encriptada) y una lista vacía de Roles/Permisos
-        return new User(usuario.getUsername(), usuario.getPassword(), new ArrayList<>());
+        // Si lo encuentra, lo convierte en un objeto "UserDetails" que Spring Security entiende.
+        // Usamos el constructor .disabled() -> Si el usuario NO está activo (!usuario.isActivo()),
+        // pasará a estar deshabilitado y se rechazará el inicio de sesión de forma segura.
+        return User.withUsername(usuario.getUsername())
+                .password(usuario.getPassword())
+                .disabled(!usuario.isActivo())
+                .authorities(new ArrayList<>()) // Mantiene la lista vacía de roles/permisos
+                .build();
     }
 }

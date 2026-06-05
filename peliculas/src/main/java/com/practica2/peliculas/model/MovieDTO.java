@@ -3,7 +3,7 @@ package com.practica2.peliculas.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MovieDTO {
-    @JsonProperty("title") // <-- Esto le dice: "Si de Python viene 'title', guárdalo en 'titulo'"
+    @JsonProperty("title") // Esto le dice: "Si de Python viene 'title', guárdalo en 'titulo'"
     private String titulo;
 
     @JsonProperty("year")
@@ -11,7 +11,7 @@ public class MovieDTO {
 
     private String poster; // Este no cambia porque es igual en ambos
 
-    @JsonProperty("plot") // O "description"/"reason", pon el que use tu API de Python
+    @JsonProperty("plot")
     private String descripcion;
 
     // --- GETTERS Y SETTERS ---
