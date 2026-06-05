@@ -25,7 +25,7 @@
             min-height: 100vh;
         }
 
-        /* --- NAVBAR --- */
+
         .navbar {
             background-color: var(--card-bg) !important;
             padding: 0.8rem 2rem !important;
@@ -57,15 +57,21 @@
 
         .btn-logout {
             background: none;
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
+            border: 1px solid rgba(255, 77, 77, 0.4);
+            color: #ff4d4d;
             padding: 5px 15px;
             border-radius: 8px;
             cursor: pointer;
             transition: 0.3s;
+            font-weight: bold;
+        }
+        .btn-logout:hover {
+            background-color: #ff4d4d;
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
         }
 
-        /* --- CONTENIDO --- */
+
         .main-content { margin-top: 130px; text-align: center; padding: 20px; max-width: 1100px; margin-left: auto; margin-right: auto; }
 
         .search-container {
@@ -102,7 +108,7 @@
         }
         .btn-recommend:hover { background-color: var(--accent-hover); transform: scale(1.02); }
 
-        /* --- FICHA PELÍCULA --- */
+
         .recommendation-result {
             background: rgba(255, 255, 255, 0.03);
             border-radius: 20px;
@@ -120,7 +126,7 @@
         .btn-skip { background-color: transparent; color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 12px; width: 100%; text-decoration: none; display: inline-block; text-align: center; transition: 0.3s; cursor: pointer;}
         .btn-skip:hover { background: rgba(255,255,255,0.1); }
 
-        /* --- RECIENTES --- */
+
         .recent-title { color: var(--secondary-text); text-align: left; border-left: 5px solid var(--accent-color); padding-left: 15px; margin-bottom: 30px; }
         .movies-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
         .movie-item { background: rgba(45, 19, 34, 0.5); padding: 15px; border-radius: 20px; border: 1px solid rgba(255, 77, 148, 0.1); transition: 0.3s; }
@@ -142,10 +148,11 @@
                     <ul class="dropdown-menu dropdown-menu-end shadow">
                         <li><a class="dropdown-item" th:href="@{/principal}">🏠 Recomendador</a></li>
                         <li><a class="dropdown-item" th:href="@{/diario}">📚 Mi Historial</a></li>
+                        <li><a class="dropdown-item" th:href="@{/perfil}">👤 Mi Perfil</a></li>
                     </ul>
                 </li>
                 <li class="nav-item ms-lg-3">
-                    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout">Salir</button></form>
+                    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout">❌ Salir</button></form>
                 </li>
             </ul>
         </div>
@@ -228,13 +235,25 @@
 
                         <label class="mb-2 d-block text-secondary">Tu valoración:</label>
                         <select name="estrellas" class="custom-select w-100 mb-4">
-                            <option value="0.5">0.5 ⭐ (Pésima)</option>
-                            <option value="1.0">1.0 ⭐</option>
-                            <option value="2.0">2.0 ⭐</option>
-                            <option value="3.0">3.0 ⭐</option>
-                            <option value="3.5" selected>3.5 ⭐ (Me ha gustado)</option>
-                            <option value="4.0">4.0 ⭐ (PEC)</option>
-                            <option value="5.0">5.0 ⭐ (Cine)</option>
+                            <option value="0.5">0.5 ⭐ (No hay quien se vea esto)</option>
+
+                            <option value="1.0">1.0 ⭐ (Siesta histórica)</option>
+
+                            <option value="1.5">1.5 ⭐ (Habría estado mejor otra cosa)</option>
+
+                            <option value="2.0">2.0 ⭐ (Se deja ver)</option>
+
+                            <option value="2.5">2.5 ⭐ (Mehñera)</option>
+
+                            <option value="3.0">3.0 ⭐ (No me ha hecho disociar)</option>
+
+                            <option value="3.5" selected>3.5 ⭐ (Pues me ha gustado vamos)</option>
+
+                            <option value="4.0">4.0 ⭐ (He estado enganchado)</option>
+
+                            <option value="4.5">4.5 ⭐ (Chichosona)</option>
+
+                            <option value="5.0">5.0 ⭐ (Cine para cinéfilos)</option>
                         </select>
 
                         <div class="row g-2">
@@ -271,10 +290,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    /**
-     * Función para que el botón "Pasar" no pierda los filtros actuales.
-     * Copia los valores del formulario de búsqueda al formulario oculto antes de enviarlo.
-     */
     function prepararPasar() {
         const formFiltros = document.getElementById('formFiltros');
 

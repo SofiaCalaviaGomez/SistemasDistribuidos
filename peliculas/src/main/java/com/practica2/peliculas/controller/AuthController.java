@@ -15,35 +15,34 @@ public class AuthController {
     @Autowired
     private UsuarioService usuarioService;
 
+    // Carga la página de bienvenida (index.html)
     @GetMapping("/")
     public String index() {
         return "index";
     }
 
+    // Muestra el formulario de inicio de sesión (¡ESTE ERA EL QUE FALTA!)
     @GetMapping("/login")
     public String login() {
-        return "login";
+        return "login"; // Busca templates/login.html sin redirigir
     }
 
+    // Muestra el formulario de registro
     @GetMapping("/registro")
     public String registroForm(Model model) {
-        // Esto crea el objeto vacío que Thymeleaf rellenará
         model.addAttribute("usuario", new Usuario());
         return "registro";
     }
 
+    // Recibe los datos del formulario de registro
     @PostMapping("/registro")
     public String registrar(@ModelAttribute Usuario usuario, Model model) {
-        System.out.println("LOG: Intentando registrar al usuario: " + usuario.getUsername());
-        System.out.println("LOG: Nombre recibido: " + usuario.getNombre());
         try {
-            // Intentamos registrar
             usuarioService.registrar(usuario);
             return "redirect:/login?exito=true";
         } catch (Exception e) {
-            // Si el username ya existe o hay error de BD, volvemos al formulario con error
             model.addAttribute("error", "El nombre de usuario ya existe o los datos son incorrectos.");
-            model.addAttribute("usuario", usuario); // Mantenemos los datos para que no tenga que escribir todo otra vez
+            model.addAttribute("usuario", usuario);
             return "registro";
         }
     }

@@ -3,13 +3,17 @@ package com.practica2.peliculas.controller;
 import com.practica2.peliculas.model.MovieDTO;
 import com.practica2.peliculas.model.PeliculaDescartada;
 import com.practica2.peliculas.model.PeliculaValorada;
+import com.practica2.peliculas.model.Usuario;
 import com.practica2.peliculas.repository.DescarteRepository;
 import com.practica2.peliculas.repository.PeliculaRepository;
+import com.practica2.peliculas.repository.UsuarioRepository;
 import com.practica2.peliculas.service.RecomendadorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.servlet.http.HttpSession;
@@ -28,10 +32,15 @@ public class PeliculaController {
     @Autowired
     private DescarteRepository descarteRepository;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     // --- PANTALLA PRINCIPAL ---
+    // Ahora filtrado para que cada usuario solo vea sus propias películas recientes
     @GetMapping("/principal")
-    public String principal(Model model) {
-        model.addAttribute("recientes", peliculaRepository.findTop4ByOrderByIdDesc());
+    public String principal(Model model, Authentication auth) {
+        Usuario usuarioActual = usuarioRepository.findByUsername(auth.getName()).get();
+        model.addAttribute("recientes", peliculaRepository.findTop4ByUsuarioOrderByIdDesc(usuarioActual));
         return "principal";
     }
 
@@ -43,18 +52,20 @@ public class PeliculaController {
                              @RequestParam(required = false) String persona,
                              @RequestParam(required = false) String excluirTemporal,
                              HttpSession session,
+                             Authentication auth,
                              Model model) {
 
-        // 1. Mantener las pelis recientes visibles
-        model.addAttribute("recientes", peliculaRepository.findTop4ByOrderByIdDesc());
+        // Cargamos los datos del usuario actual para mantener la interfaz actualizada
+        Usuario usuarioActual = usuarioRepository.findByUsername(auth.getName()).get();
+        model.addAttribute("recientes", peliculaRepository.findTop4ByUsuarioOrderByIdDesc(usuarioActual));
 
-        // 2. DEVOLVER FILTROS A LA VISTA (Para que no se borren en el HTML)
+        // Devolvemos filtros a la vista
         model.addAttribute("generoSeleccionado", genero);
         model.addAttribute("decadaSeleccionada", decada);
         model.addAttribute("ratingSeleccionado", rating);
-        model.addAttribute("personaSeleccionada", persona); // <-- Importante para el buscador de texto
+        model.addAttribute("personaSeleccionada", persona);
 
-        // 3. Gestionar historial de saltos (en memoria de sesión)
+        // Memoria temporal de la sesión (películas saltadas)
         List<String> saltadas = (List<String>) session.getAttribute("saltadas");
         if (saltadas == null) saltadas = new ArrayList<>();
 
@@ -64,7 +75,7 @@ public class PeliculaController {
         session.setAttribute("saltadas", saltadas);
 
         try {
-            // 4. Llamada al servicio con la nueva lógica multianuncio/multifiltro
+            // Pasamos los filtros al microservicio de Python
             MovieDTO recomendacion = recomendadorService.obtenerRecomendacion(genero, decada, rating, persona, saltadas);
             model.addAttribute("pelicula", recomendacion);
         } catch (Exception e) {
@@ -74,37 +85,52 @@ public class PeliculaController {
         return "principal";
     }
 
-    // --- AÑADIR AL DIARIO ---
+    // --- AÑADIR AL DIARIO (PRIVADO) ---
     @PostMapping("/guardar")
     public String guardar(@RequestParam String titulo,
                           @RequestParam String poster,
-                          @RequestParam double estrellas) {
+                          @RequestParam double estrellas,
+                          Authentication auth) {
+
+        // Buscamos quién es el usuario logueado
+        Usuario usuarioActual = usuarioRepository.findByUsername(auth.getName()).get();
 
         PeliculaValorada peli = new PeliculaValorada();
         peli.setTitulo(titulo);
         peli.setPoster(poster);
         peli.setEstrellas(estrellas);
+        peli.setUsuario(usuarioActual); // Asignamos el dueño de la película
 
         peliculaRepository.save(peli);
         return "redirect:/diario";
     }
 
-    // --- DESCARTAR PARA SIEMPRE (No volverá a salir nunca) ---
+    // --- DESCARTAR PARA SIEMPRE ---
     @PostMapping("/descartar")
     public String descartar(@RequestParam String titulo,
                             @RequestParam String genero,
                             HttpSession session,
+                            Authentication auth,
                             Model model) {
 
         descarteRepository.save(new PeliculaDescartada(titulo));
-        // Recargamos recomendación manteniendo el género actual
-        return recomendar(genero, null, 0.0, null, null, session, model);
+        // Recargamos recomendación pasando el objeto de autenticación
+        return recomendar(genero, null, 0.0, null, null, session, auth, model);
     }
 
-    // --- VER EL DIARIO ---
+    // --- VER EL DIARIO PERSONAL ---
     @GetMapping("/diario")
-    public String verDiario(Model model) {
-        model.addAttribute("peliculas", peliculaRepository.findAll());
+    public String verDiario(Model model, Authentication auth) {
+        Usuario usuarioActual = usuarioRepository.findByUsername(auth.getName()).get();
+        // Solo recuperamos las películas de este usuario
+        model.addAttribute("peliculas", peliculaRepository.findByUsuario(usuarioActual));
         return "diario";
+    }
+
+    // --- ELIMINAR REGISTRO ---
+    @PostMapping("/eliminar/{id}")
+    public String eliminar(@PathVariable Long id) {
+        peliculaRepository.deleteById(id);
+        return "redirect:/diario";
     }
 }

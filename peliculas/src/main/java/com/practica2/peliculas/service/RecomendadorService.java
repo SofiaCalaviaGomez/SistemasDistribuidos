@@ -12,10 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 @Service
 public class RecomendadorService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = new RestTemplate(); // Herramienta para hacer peticiones HTTP a Python
 
     @Autowired
     private PeliculaRepository peliculaRepository;
@@ -23,15 +24,16 @@ public class RecomendadorService {
     @Autowired
     private DescarteRepository descarteRepository;
 
-    // ACTUALIZADO: Ahora recibe los nuevos parámetros de filtro
+    // Método principal que solicita una película al API de Flask (Python)
     public MovieDTO obtenerRecomendacion(String genero, String decada, Double rating, String persona, List<String> excluidasTemporales) {
         try {
-            // 1. Limpieza de datos básicos
+            // 1. Limpieza y preparación de filtros (evita enviar valores nulos)
             String personaLimpia = (persona != null) ? persona.trim() : "";
             String decadaLimpia = (decada != null) ? decada.trim() : "";
             String generoLimpio = (genero != null) ? genero.toLowerCase() : "random";
 
-            // 2. Cargamos exclusiones de la Base de Datos
+            // 2. Gestión de "Memoria": Buscamos qué películas NO debemos mostrar
+            // Sacamos los títulos de la tabla de 'Valoradas' y de 'Descartadas'
             List<String> vistas = peliculaRepository.findAll().stream()
                     .map(p -> p.getTitulo()).collect(Collectors.toList());
 
@@ -41,33 +43,32 @@ public class RecomendadorService {
             List<String> todasExcluidas = new ArrayList<>(vistas);
             todasExcluidas.addAll(descartadas);
 
-            // 3. Añadimos exclusiones temporales de la sesión
+            // 3. Añadimos las películas que el usuario ha saltado en esta sesión actual
             if (excluidasTemporales != null) {
                 todasExcluidas.addAll(excluidasTemporales);
             }
 
+            // Convertimos la lista de títulos en una sola cadena separada por comas para enviarla por URL
             String excluidasStr = String.join(",", todasExcluidas);
 
-            // --- 4. CONSTRUCCIÓN DE LA URL CON FILTROS ---
-            // Añadimos los nuevos placeholders: decada, rating y persona
+            // 4. Comunicación con el API de terceros (Python)
+            // Definimos la dirección del servidor Flask y sus parámetros
             String url = "http://localhost:5000/api/recomendar?genero={g}&decada={d}&rating={r}&persona={p}&excluir={e}";
 
-            // DEBUG: Para verificar en consola qué enviamos
+            // LOG de control para depurar errores en la consola de IntelliJ
             System.out.println("DEBUG: Enviando filtros -> Gen: " + generoLimpio + " | Dec: " + decadaLimpia + " | Rat: " + rating + " | Per: " + personaLimpia);
 
-            // 5. Enviamos la petición con todos los parámetros en orden
+            // 5. Ejecución de la llamada: Java espera a que Python responda con un objeto MovieDTO
             return restTemplate.getForObject(url, MovieDTO.class,
-                    generoLimpio,
-                    decadaLimpia,
-                    rating,
-                    personaLimpia,
-                    excluidasStr
+                    generoLimpio, decadaLimpia, rating, personaLimpia, excluidasStr
             );
 
         } catch (HttpStatusCodeException e) {
+            // Captura errores específicos de HTTP (ej: Python devolvió 404 o 500)
             System.err.println("Error en la petición a Python: " + e.getResponseBodyAsString());
             throw e;
         } catch (Exception e) {
+            // Captura cualquier otro fallo (ej: Python está apagado)
             System.err.println("Error genérico: " + e.getMessage());
             return null;
         }
