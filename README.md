@@ -46,3 +46,14 @@ Accede a la carpeta del recomendador e instala las dependencias:
 cd peliculas
 pip install flask requests
 python app.py
+
+---------------------
+## Puertos
+
+##Requisitos Previos
+docker compose up -d
+Para levantar los contenedores
+
+##Ambos puertos
+Aplicación: http://localhost:8080
+Mailpit: http://localhost:8025
